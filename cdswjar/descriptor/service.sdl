@@ -1,0 +1,559 @@
+// Copyright (c) 2017 Cloudera, Inc. All rights reserved.
+{
+  "name" : "CDSW",
+  "label" : "Cloudera Data Science Workbench",
+  "icon" : "images/cdsw.png",
+  "description" : "Cloudera Data Science Workbench enables fast, easy, and secure self-service data science for the enterprise.",
+  "version" : "1.6.1",
+  "runAs" : {
+    "user" : "root",
+    "group" : "root"
+  },
+  "compatibility" : {
+    "cdhVersion" : {
+      "min" : "6",
+      "max" : "7"
+    }
+  },
+  "parcel" : {
+    "repoUrl" : "https://archive.cloudera.com/cdsw1/1.6.1/parcels/",
+    "requiredTags" : ["cdsw", "cdh"]
+  },
+  "rolesWithExternalLinks" : ["CDSW_APPLICATION"],
+  "serviceDependencies" : [
+    {
+      "name" : "SPARK_ON_YARN",
+      "required" : "true"
+    },
+    {
+      "name" : "HDFS",
+      "required" : "false"
+    },
+    {
+      "name" : "HBASE",
+      "required" : "false"
+    },
+    {
+      "name" : "YARN",
+      "required" : "true"
+    },
+    {
+      "name" : "HIVE",
+      "required" : "false"
+    },
+    {
+      "name" : "SOLR",
+      "required" : "false"
+    },
+    {
+      "name" : "SENTRY",
+      "required" : "false"
+    }
+  ],
+  "serviceInit" : {
+    "preStartSteps" : [
+      {
+        "commandName" : "prepare_node"
+      }
+    ]
+  },
+  "commands" : [
+    {
+      "name" : "prepare_node",
+      "label" : "Prepare Node",
+      "description" : "Configures the node, formats docker devices and optionally installs any required packages.",
+      "roleCommand" : "prepare_node",
+      "roleName" : "CDSW_DOCKER",
+      "runMode" : "all"
+    },
+    {
+      "name" : "status",
+      "label" : "Status",
+      "description" : "Displays the current status of the application.",
+      "roleCommand" : "status",
+      "roleName" : "CDSW_APPLICATION",
+      "runMode" : "all"
+    },
+    {
+      "name" : "validate",
+      "label" : "Validate",
+      "description" : "Performs diagnostic checks for common errors that might be preventing the application from running as expected.",
+      "roleCommand" : "validate",
+      "roleName" : "CDSW_DOCKER",
+      "runMode" : "all"
+    }
+  ],
+  "parameters" : [
+    {
+      "name" : "cdsw.domain.config",
+      "label" : "Cloudera Data Science Workbench Domain",
+      "description" : "Wildcard DNS domain configured to point to the master node. If the wildcard DNS entries are configured as cdsw.<i>your_domain</i>.com and *.cdsw.<i>your_domain</i>.com, then this property should be set to cdsw.<i>your_domain</i>.com. For more information on setting up a wildcard DNS subdomain, see the <a href=\"http://tiny.cloudera.com/cdsw-install\" target=\"_blank\">Cloudera Data Science Workbench Installation Guide</a>.",
+      "configName" : "DOMAIN",
+      "type" : "string",
+      "conformRegex" : "\\A(?!https?\\:\\/\\/|.*\\*).*\\z",
+      "configurableInWizard" : true,
+      "required" : true
+    },
+    {
+      "name" : "cdsw.master.ip.config",
+      "label" : "Master Node IPv4 Address",
+      "description" : "IPv4 address for the master node that is reachable from the worker nodes.<br/> Within an AWS VPC, MASTER_IP should be set to the internal IP of the master node; for instance, \"10.251.50.12\" corresponding to master node name of ip-10-251-50-12.ec2.internal.<br/>If left empty, CDSW will resolve the IP address of master node and use it.",
+      "configName" : "MASTER_IP",
+      "type" : "string",
+      "conformRegex" : "\\A(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}\\z",
+      "configurableInWizard" : true,
+      "default" : ""
+    },
+    {
+      "name" : "cdsw.http.proxy.config",
+      "label" : "HTTP Proxy",
+      "description" : "If your deployment is behind an HTTP proxy, set the HTTP_PROXY here in the form \"http://&lt;host&gt;:&lt;port&gt;/\" or \"https://&lt;host&gt;:&lt;port&gt;/\".",
+      "configName" : "HTTP_PROXY",
+      "type" : "uri",
+      "allowedSchemes" : [
+        "http",
+        "https"
+      ]
+    },
+    {
+      "name" : "cdsw.https.proxy.config",
+      "label" : "HTTPS Proxy",
+      "description" : "If your deployment is behind an HTTPS proxy, set the HTTPS_PROXY here in the form \"http://&lt;host&gt;:&lt;port&gt;/\" or \"https://&lt;host&gt;:&lt;port&gt;/\".",
+      "configName" : "HTTPS_PROXY",
+      "type" : "uri",
+      "allowedSchemes" : [
+        "http",
+        "https"
+      ]
+    },
+    {
+      "name" : "cdsw.socks.proxy.config",
+      "label" : "SOCKS Proxy",
+      "description" : "If your deployment is behind a SOCKS proxy, set the ALL_PROXY here in the form \"socks5://&lt;host&gt;:&lt;port&gt;\".",
+      "configName" : "ALL_PROXY",
+      "type" : "uri",
+      "allowedSchemes" : [
+        "socks5"
+      ]
+    },
+    {
+      "name" : "cdsw.no.proxy.config",
+      "label" : "No Proxy",
+      "description" : "Comma-separated list of hostnames that should be skipped from the proxy.<br/><br/>These include 127.0.0.1, localhost, the value of MASTER_IP, and any private Docker registries and HTTP services inside the firewall that Cloudera Data Science Workbench users might want to access from the engines.",
+      "configName" : "NO_PROXY",
+      "type" : "string",
+      "default": ""
+    },
+    {
+      "name" : "cdsw.enable.gpu.config",
+      "label" : "Enable GPU Support",
+      "description" : "If it is enabled, then GPU's will be available for use by the cluster. It will have no effect on a node that does not have GPU support.",
+      "configName" : "NVIDIA_GPU_ENABLE",
+      "type" : "boolean",
+      "default" : "false"
+    },
+    {
+      "name" : "cdsw.kubernetes.secret",
+      "label" : "Cluster Secret",
+      "description" : "Password used by Cloudera Data Science Workbench nodes to secure cluster communication.",
+      "configName" : "CDSW_CLUSTER_SECRET",
+      "type" : "password",
+      "initType" : "randomBase64"
+    },
+    {
+      "name" : "cdsw.install.required.packages",
+      "label" : "Install Required Packages",
+      "description" : "If it is enabled, 'Prepare Node' command will install all the required package dependencies. See <a href=\"http://tiny.cloudera.com/cdsw-install\" target=\"_blank\">Installing and Upgrading Cloudera Data Science Workbench</a> for the list of required packages.",
+      "type" : "boolean",
+      "default" : "true",
+      "configurableInWizard" : true
+    },
+    {
+      "name" : "cdsw.reserve.master",
+      "label" : "Reserve Master Host",
+      "description" : "If this property is enabled, the Master host will be reserved for internal CDSW services while user workloads (such as sessions, jobs, experiments, and models) will run exclusively on Worker hosts.<br/><br/>Use this property only when the deployment has more than one CDSW node. Enabling this property on single-node deployments causes CDSW to stop scheduling any user workloads.",
+      "configName" : "RESERVE_MASTER",
+      "type" : "boolean",
+      "default" : "false",
+      "configurableInWizard" : true
+    },
+    {
+      "name" : "cdsw.log.staging.dir",
+      "label" : "Log Staging Directory",
+      "description" : "The staging directory for Cloudera Data Science Workbench logs. If you choose to use a non-default location, make sure to allocate at least 10 GB to the new directory. The 'cloudera-scm' user must have permission to write to this directory",
+      "configName" : "LOGS_STAGING_DIR",
+      "type" : "string",
+      "default": "/var/lib/cdsw/tmp"
+    },
+    {
+      "name" : "cdsw.auxiliary.nodes",
+      "label" : "Auxiliary Nodes",
+      "description" : "Comma-separated list of hostnames where the auxiliary-node label should be applied. Hosts listed here will be deprioritized for workload scheduling. That is, they will be chosen to run workloads only if other hosts are unavailable or busy. <br/>Note: Do NOT add the Master host here.<br/>Note: Hosts equipped with GPUs will automatically have this label applied to them.",
+      "configName" : "AUXILIARY_NODES",
+      "type" : "string_array",
+      "separator" : ","
+    }
+  ],
+  "roles" : [
+    {
+      "name" : "CDSW_MASTER",
+      "label" : "Master",
+      "pluralLabel" : "Masters",
+      "startRunner" : {
+        "program" : "scripts/control.sh",
+        "args" : [
+          "start_kubelet_master"
+        ]
+      },
+      "stopRunner" : {
+        "runner" : {
+          "program" : "scripts/control.sh",
+          "args" : [
+            "stop_kubelet_master"
+          ]
+        },
+        "timeout" : 600000
+      },
+      "healthAggregation" : {
+        "type" : "singleton"
+      },
+      "topology" : {
+        "minInstances" : 1,
+        "maxInstances" : 1
+      },
+      "configWriter" : {
+        "generators" : [
+          {
+            "filename" : "cdsw.properties",
+            "configFormat" : "properties",
+            "excludedParams" : ["cdsw.install.required.packages"]
+          }
+        ],
+        "peerConfigGenerators" : [
+          {
+            "filename" : "cdsw_master.properties",
+            "params" : ["cdsw.domain.config"],
+            "roleName" : "CDSW_APPLICATION"
+          }
+        ],
+        "auxConfigGenerators" : [
+          {
+            "filename" : "meta/cdsw_version",
+            "sourceFilename" : "meta/cdsw_version"
+          }
+        ]
+      }
+    },
+    {
+      "name" : "CDSW_APPLICATION",
+      "label" : "Application",
+      "pluralLabel" : "Applications",
+      "startRunner" : {
+        "program" : "scripts/control.sh",
+        "args" : [
+          "start_app"
+        ]
+      },
+      "logging" : {
+        "dir" : "/var/log/cdsw",
+        "filename" : "cdsw_monitor.log",
+        "modifiable" : true,
+        "configName" : "APPLICATION_MONITOR_LOG_DIR"
+      },
+      "parameters" : [
+        {
+          "name" : "cdsw.enable.tls.config",
+          "label" : "Enable TLS",
+          "description" : "Enable and enforce HTTPS (TLS/SSL) access to the web application (optional). Both internal and external termination are supported. To enable internal termination, you must also set the TLS Certificate for Internal Termination and TLS Key for Internal Termination parameters. If these parameters are not set, terminate TLS using an external proxy.",
+          "configName" : "TLS_ENABLE",
+          "type" : "boolean"
+        },
+        {
+          "name" : "cdsw.tls.cert.config",
+          "label" : "TLS Certificate for Internal Termination",
+          "description" : "Complete path to the certificate (in PEM format) used for internal TLS termination. Set the TLS Certificate for Internal Termination and TLS Key for Internal Termination parameters only if you are not terminating TLS externally. You must also set the Enable TLS property to enable and enforce termination. The certificate must include both DOMAIN and *.DOMAIN as hostnames. Self-signed certificates are not supported unless trusted fully by clients. Accepting an invalid certificate manually can cause connection failures for unknown subdomains.",
+          "configName" : "TLS_CERT",
+          "pathType" : "serviceSpecific",
+          "type" : "path"
+        },
+        {
+          "name" : "cdsw.tls.key.config",
+          "label" : "TLS Key for Internal Termination",
+          "description" : "Complete path to the private key (in PEM format) used for internal TLS termination. Set the TLS Certificate for Internal Termination and TLS Key for Internal Termination parameters only if you are not terminating TLS externally. You must also set the Enable TLS property to enable and enforce termination.",
+          "configName" : "TLS_KEY",
+          "pathType" : "serviceSpecific",
+          "type" : "path"
+        },
+        {
+          "name" : "cdsw.application.monitor.log.level",
+          "label" : "Application Monitor Log Verbosity Level",
+          "description" : "Level of verbosity in Cloudera Data Science Workbench Application Monitor logs.",
+          "configName" : "APPLICATION_MONITOR_LOG_LEVEL",
+          "default" : "INFO",
+          "type" : "string_enum",
+          "validValues" : [
+            "CRITICAL",
+            "ERROR",
+            "WARNING",
+            "INFO",
+            "DEBUG"
+          ]
+        },
+        {
+          "name" : "cdsw.application.monitor.log.max_size",
+          "label" : "Application Monitor Maximum Logs Size",
+          "description" : "The maximum log size per log file, for Cloudera Data Science Workbench Application Monitor logs.",
+          "configName" : "APPLICATION_MONITOR_LOG_MAX_SIZE_MB",
+          "default" : "2048",
+          "min" : 0,
+          "unit" : "megabytes",
+          "type" : "memory"
+        },
+        {
+          "name" : "cdsw.application.monitor.log.backup_count",
+          "label" : "Application Monitor Log File Backups",
+          "description" : "Maximum number of Application Monitor log files being stored for backups.",
+          "configName" : "APPLICATION_MONITOR_LOG_BACKUP_COUNT",
+          "default" : "5",
+          "min" : 0,
+          "type" : "long"
+        }
+      ],
+      "commands" : [
+        {
+          "name" : "status",
+          "label" : "Status",
+          "description" : "Displays the current status of the application.",
+          "expectedExitCodes" : [0],
+          "requiredRoleState" : "running",
+          "commandRunner" : {
+            "program" : "scripts/control.sh",
+            "args" : ["status"]
+          }
+        }
+      ],
+      "healthAggregation" : {
+        "type" : "singleton"
+      },
+      "serviceMonitorClient" : "true",
+      "stopRunner" : {
+        "runner" : {
+          "program" : "scripts/control.sh",
+          "args" : [
+            "stop_app"
+          ]
+        },
+        "timeout" : 600000
+      },
+      "externalLink" : {
+        "name" : "cdsw_web_ui",
+        "label" : "CDSW Web UI",
+        "url" : "http://${cdsw.domain.config}",
+        "secureUrl" : "https://${cdsw.domain.config}"
+      },
+      "topology" : {
+        "minInstances" : 1,
+        "maxInstances" : 1,
+        "placementRules" : [
+          {
+            "type" : "alwaysWith",
+            "roleType" : "CDSW_MASTER"
+          }
+        ]
+      },
+      "configWriter" : {
+        "generators" : [
+          {
+            "filename" : "cdsw.properties",
+            "configFormat" : "properties",
+            "excludedParams" : ["cdsw.install.required.packages"]
+          }
+        ],
+        "peerConfigGenerators" : [
+          {
+            "filename" : "cdsw_master.properties",
+            "params" : ["cdsw.domain.config"],
+            "roleName" : "CDSW_APPLICATION"
+          }
+        ],
+        "auxConfigGenerators" : [
+          {
+            "filename" : "meta/cdsw_version",
+            "sourceFilename" : "meta/cdsw_version"
+          }
+        ]
+      }
+    },
+    {
+      "name" : "CDSW_WORKER",
+      "label" : "Worker",
+      "pluralLabel" : "Workers",
+      "startRunner" : {
+        "program" : "scripts/control.sh",
+        "args" : [
+          "start_kubelet_worker"
+        ]
+      },
+      "stopRunner" : {
+        "runner" : {
+          "program" : "scripts/control.sh",
+          "args" : [
+            "stop_kubelet_worker"
+          ]
+        },
+        "timeout" : 600000
+      },
+      "healthAggregation" : {
+        "type" : "nonSingleton",
+        "percentGreenForGreen" : 95.0,
+        "percentYellowGreenForYellow" : 70.0
+      },
+      "topology" : {
+        "minInstances" : 0,
+        "placementRules" : [
+          {
+            "type" : "neverWith",
+            "roleTypes" : [
+              "CDSW_APPLICATION",
+              "CDSW_MASTER"
+            ]
+          }
+        ]
+      },
+      "configWriter" : {
+        "generators" : [
+          {
+            "filename" : "cdsw.properties",
+            "configFormat" : "properties",
+            "excludedParams" : ["cdsw.install.required.packages"]
+          }
+        ],
+        "peerConfigGenerators" : [
+          {
+            "filename" : "cdsw_master.properties",
+            "params" : ["cdsw.domain.config"],
+            "roleName" : "CDSW_APPLICATION"
+          }
+        ],
+        "auxConfigGenerators" : [
+          {
+            "filename" : "meta/cdsw_version",
+            "sourceFilename" : "meta/cdsw_version"
+          }
+        ]
+      }
+    },
+    {
+      "name" : "CDSW_DOCKER",
+      "label" : "Docker Daemon",
+      "pluralLabel" : "Docker Daemons",
+      "startRunner" : {
+        "program" : "scripts/control.sh",
+        "args" : [
+          "start_docker"
+        ]
+      },
+      "stopRunner" : {
+        "runner" : {
+          "program" : "scripts/control.sh",
+          "args" : [
+            "stop_docker"
+          ]
+        },
+        "timeout" : 600000
+      },
+      "parameters" : [
+        {
+          "name" : "cdsw.docker.devices.config",
+          "label" : "Docker Block Device",
+          "description" : "Cloudera Data Science Workbench installer will <b>format</b> and mount Docker on each gateway host. Do not mount these block devices prior to installation.<br/>Every Cloudera Data Science Workbench gateway host must have one or more block devices with at least 500 GB dedicated to storage of Docker images. SSDs are strongly recommended.<br/> Use the full path, for instance \"/dev/xvde\".",
+          "configName" : "DOCKER_BLOCK_DEVICES",
+          "type" : "path_array",
+          "pathType" : "serviceSpecific",
+          "separator" : " ",
+          "configurableInWizard" : true,
+          "required" : true
+        }
+      ],
+      "supportBundle" : {
+        "description" : "Collects diagnostics data for Cloudera Data Science Workbench.",
+        "runMode" : "all",
+        "timeout" : 300000,
+        "runner" : {
+          "program" : "scripts/control.sh",
+          "args" : [
+            "diagnostics"
+          ]
+        }
+      },
+      "commands" : [
+        {
+          "name" : "prepare_node",
+          "label" : "Prepare Node",
+          "description" : "Configures the node, formats docker devices and optionally installs any required packages.",
+          "expectedExitCodes" : [0],
+          "requiredRoleState" : "stopped",
+          "commandRunner" : {
+            "program" : "scripts/control.sh",
+            "args" : ["prepare_node", "${cdsw.install.required.packages}"]
+          }
+        },
+        {
+          "name" : "validate",
+          "label" : "Validate",
+          "description" : "Performs diagnostic checks for common errors that might be preventing the application from running as expected.",
+          "expectedExitCodes" : [0],
+          "requiredRoleState" : "running",
+          "commandRunner" : {
+            "program" : "scripts/control.sh",
+            "args" : ["validate"]
+          }
+        }
+      ],
+      "healthAggregation" : {
+        "type" : "nonSingleton",
+        "percentGreenForGreen" : 95.0,
+        "percentYellowGreenForYellow" : 70.0
+      },
+      "topology" : {
+        "placementRules" : [
+          {
+            "type" : "alwaysWithAny",
+            "roleTypes" : [
+              "CDSW_MASTER",
+              "CDSW_WORKER"
+            ]
+          }
+        ]
+      },
+      "configWriter" : {
+        "generators" : [
+          {
+            "filename" : "cdsw.properties",
+            "configFormat" : "properties",
+            "excludedParams" : ["cdsw.install.required.packages"],
+            "additionalConfigs" : [
+              {
+                "key" : "DOCKER_FS",
+                "value" : "devicemapper"
+              }
+            ]
+          }
+        ],
+        "peerConfigGenerators" : [
+          {
+            "filename" : "cdsw_master.properties",
+            "params" : ["cdsw.domain.config", "log_dir"],
+            "roleName" : "CDSW_APPLICATION"
+          }
+        ],
+        "auxConfigGenerators" : [
+          {
+            "filename" : "meta/cdsw_version",
+            "sourceFilename" : "meta/cdsw_version"
+          }
+        ]
+      }
+    }
+  ]
+}

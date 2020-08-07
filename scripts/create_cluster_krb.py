@@ -6,6 +6,7 @@ from pprint import pprint
 import json
 import time
 import sys
+from os import getenv
 
 def wait(cmd, timeout=None):
     SYNCHRONOUS_COMMAND_ID = -1
@@ -48,21 +49,28 @@ cm_api = cm_client.ClouderaManagerResourceApi(api_client)
 cm_api.begin_trial()
 
 
+# DEFAULT VALUES
+KDC={
+  "KDC_HOST"        : "ip-172-31-31-238.ec2.internal",
+  "KDC_ADMIN_HOST"  : "ip-172-31-31-238.ec2.internal",
+  "KDC_TYPE"        : "MIT KDC",
+  "KRB_ENC_TYPES"   : "aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 arcfour-hmac-md5r",
+  "SECURITY_REALM"  : "CLOUDERA.COM"
+}
 
-# Update Cloudera Manager config for KRB 
+KDC_PASSWORD = getenv("PASSWORD") or "BadPass#1"
+KDC_USERNAME = getenv("KDC_USERNAME") or "cloudera-scm/admin@CLOUDERA.COM"
+
+for key in KDC:
+  KDC[key] = getenv(key) or KDC[key]
+
+# Update Cloudera Manager config for KRB
 body = cm_client.ApiConfigList()
-body.items=[
-    cm_client.ApiConfig(name='KDC_HOST', value='YourHostname'),
-    cm_client.ApiConfig(name='KDC_ADMIN_HOST', value='YourHostname'),
-    cm_client.ApiConfig(name='KDC_TYPE', value='MIT KDC'),  
-    cm_client.ApiConfig(name='KRB_ENC_TYPES', value='aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 arcfour-hmac-md5'), 
-    cm_client.ApiConfig(name='SECURITY_REALM', value='CLOUDERA.COM'), 
-    cm_client.ApiConfig(name='KRB_MANAGE_KRB5_CONF', value='true')
-    ]
+body.items=[ cm_client.ApiConfig(name=item, value=KDC[item]) for item in KDC ]
 api_response = cm_api.update_config(message="KRB", body=body)
 
 # Import KDC admin credentials
-cmd = cm_api.import_admin_credentials(password='BadPass#1', username='cloudera-scm/admin@CLOUDERA.COM')
+cmd = cm_api.import_admin_credentials(password=KDC_PASSWORD, username=KDC_USERNAME)
 wait(cmd)
 
 
@@ -72,7 +80,7 @@ with open ("/root/myRSAkey", "r") as f:
     key = f.read()
 
 instargs = cm_client.ApiHostInstallArguments(
-    host_names=['YourHostname'], 
+    host_names=['ip-172-31-31-238.ec2.internal'], 
     user_name='root', 
     private_key=key, 
     cm_repo_url='https://archive.cloudera.com/cm7/7.1.1/', 

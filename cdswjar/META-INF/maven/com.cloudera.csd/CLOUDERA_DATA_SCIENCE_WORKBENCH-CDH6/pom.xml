@@ -1,0 +1,42 @@
+<!--
+  Copyright (c) 2017 Cloudera, Inc. All rights reserved.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.cloudera.csd</groupId>
+    <artifactId>CLOUDERA_DATA_SCIENCE_WORKBENCH</artifactId>
+    <version>1.6.1</version>
+  </parent>
+
+  <artifactId>CLOUDERA_DATA_SCIENCE_WORKBENCH-CDH6</artifactId>
+  <name>The Cloudera Data Science Workbench CSD - CDH6</name>
+  <packaging>jar</packaging>
+
+  <properties>
+    <cdsw.version>${project.version}</cdsw.version>
+    <cdh.min.version>6</cdh.min.version>
+    <cdh.max.version>7</cdh.max.version>
+    <dependent.parcels>"cdsw", "cdh"</dependent.parcels>
+    <spark.service.name>SPARK_ON_YARN</spark.service.name>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+    </plugins>
+
+    <!-- Specify files to be filtered (replace variables with actual values) -->
+    <resources>
+      <resource>
+        <directory>${project.build.directory}</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
+</project>
