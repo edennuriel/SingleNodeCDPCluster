@@ -55,7 +55,7 @@
         "clusterName": "WWBank",
         "hosts": [
             {
-                "hostName": "ip-172-31-31-238.ec2.internal",
+                "hostName": "YourHostname",
                 "hostTemplateRefName": "MasterTemplate"
             }
         ],
@@ -86,7 +86,7 @@
             },
             {
                 "name": "hive-hive_metastore_database_host",
-                "value": "ip-172-31-31-238.ec2.internal"
+                "value": "YourHostname"
             },
             {
                 "name": "hive-hive_metastore_database_password",
@@ -94,7 +94,7 @@
             },
             {
                 "name": "hue-database_host",
-                "value": "ip-172-31-31-238.ec2.internal"
+                "value": "YourHostname"
             },
             {
                 "name": "hue-database_password",
@@ -106,7 +106,7 @@
             },
             {
                 "name": "oozie-OOZIE_SERVER-BASE-oozie_database_host",
-                "value": "ip-172-31-31-238.ec2.internal"
+                "value": "YourHostname"
             },
             {
                 "name": "oozie-OOZIE_SERVER-BASE-oozie_database_password",

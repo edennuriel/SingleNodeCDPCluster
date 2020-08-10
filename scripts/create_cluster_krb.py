@@ -46,13 +46,14 @@ api_client = cm_client.ApiClient("http://localhost:7180/api/v40")
 cm_api = cm_client.ClouderaManagerResourceApi(api_client)
 
 # accept trial licence
+# to do - check if trail was started already...
 cm_api.begin_trial()
 
 
 # DEFAULT VALUES
 KDC={
-  "KDC_HOST"        : "ip-172-31-31-238.ec2.internal",
-  "KDC_ADMIN_HOST"  : "ip-172-31-31-238.ec2.internal",
+  "KDC_HOST"        : "YourHostname",
+  "KDC_ADMIN_HOST"  : "YourHostname",
   "KDC_TYPE"        : "MIT KDC",
   "KRB_ENC_TYPES"   : "aes256-cts-hmac-sha1-96 aes128-cts-hmac-sha1-96 arcfour-hmac-md5r",
   "SECURITY_REALM"  : "CLOUDERA.COM"
@@ -67,12 +68,13 @@ for key in KDC:
 # Update Cloudera Manager config for KRB
 body = cm_client.ApiConfigList()
 body.items=[ cm_client.ApiConfig(name=item, value=KDC[item]) for item in KDC ]
+# print ("------- Calling with: {}".format(body))
 api_response = cm_api.update_config(message="KRB", body=body)
 
 # Import KDC admin credentials
 cmd = cm_api.import_admin_credentials(password=KDC_PASSWORD, username=KDC_USERNAME)
+# print ("------- Calling KDC credentionals with: {}/{}".format(KDC_USERNAME,KDC_PASSWORD))
 wait(cmd)
-
 
 
 # Install CM Agent on host
@@ -80,7 +82,7 @@ with open ("/root/myRSAkey", "r") as f:
     key = f.read()
 
 instargs = cm_client.ApiHostInstallArguments(
-    host_names=['ip-172-31-31-238.ec2.internal'], 
+    host_names=['YourHostname'],
     user_name='root', 
     private_key=key, 
     cm_repo_url='https://archive.cloudera.com/cm7/7.1.1/', 
@@ -88,6 +90,7 @@ instargs = cm_client.ApiHostInstallArguments(
     ssh_port=22, 
     passphrase='')
 
+# print ("------- Calling install agent with: {}".format(instargs))
 cmd = cm_api.host_install_command(body=instargs)
 wait(cmd)
 
