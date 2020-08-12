@@ -55,9 +55,10 @@ DOCKERDEVICE=$3
 
 echo "-- Configure networking"
 PUBLIC_IP=`curl https://api.ipify.org/`
-hostnamectl set-hostname `hostname -f`
-echo "`hostname -I` `hostname`" >> /etc/hosts
-sed -i "s/HOSTNAME=.*/HOSTNAME=`hostname`/" /etc/sysconfig/network
+[[-n  DONT_SETUP_HOSTNAME ]]  && hostnamectl set-hostname `hostname -f` \
+  && echo "`hostname -I` `hostname`" >> /etc/hosts \
+  &&  sed -i "s/HOSTNAME=.*/HOSTNAME=`hostname`/" /etc/sysconfig/network
+
 systemctl disable firewalld
 systemctl stop firewalld
 setenforce 0
@@ -193,8 +194,8 @@ rm -f /opt/cloudera/cem/efm/conf/efm.properties
 cp conf/efm.properties /opt/cloudera/cem/efm/conf
 rm -f /opt/cloudera/cem/minifi/conf/bootstrap.conf
 cp conf/bootstrap.conf /opt/cloudera/cem/minifi/conf
-sed -i "s/YourHostname/`hostname -f`/g" /opt/cloudera/cem/efm/conf/efm.properties
-sed -i "s/YourHostname/`hostname -f`/g" /opt/cloudera/cem/minifi/conf/bootstrap.conf
+sed -i "s/YourHostname/`hostname`/g" /opt/cloudera/cem/efm/conf/efm.properties
+sed -i "s/YourHostname/`hostname`/g" /opt/cloudera/cem/minifi/conf/bootstrap.conf
 /opt/cloudera/cem/minifi/bin/minifi.sh install
 
 
@@ -220,12 +221,12 @@ echo "-- Now CM is started and the next step is to automate using the CM API"
 
 pip install --upgrade pip cm_client
 
-sed -i "s/YourHostname/`hostname -f`/g" $TEMPLATE
+sed -i "s/YourHostname/`hostname`/g" $TEMPLATE
 sed -i "s/YourCDSWDomain/cdsw.$PUBLIC_IP.nip.io/g" $TEMPLATE
 sed -i "s/YourPrivateIP/`hostname -I | tr -d '[:space:]'`/g" $TEMPLATE
 sed -i "s#YourDockerDevice#$DOCKERDEVICE#g" $TEMPLATE
 
-sed -i "s/YourHostname/`hostname -f`/g" scripts/create_cluster_krb.py
+sed -i "s/YourHostname/`hostname `/g" scripts/create_cluster_krb.py
 
 python scripts/create_cluster_krb.py $TEMPLATE
 
