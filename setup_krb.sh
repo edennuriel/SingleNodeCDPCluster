@@ -55,9 +55,9 @@ DOCKERDEVICE=$3
 
 echo "-- Configure networking"
 PUBLIC_IP=`curl https://api.ipify.org/`
-[[-n  DONT_SETUP_HOSTNAME ]]  && hostnamectl set-hostname `hostname -f` \
+hostnamectl set-hostname ${FQDN:-`hostname -f`} \
   && echo "`hostname -I` `hostname`" >> /etc/hosts \
-  &&  sed -i "s/HOSTNAME=.*/HOSTNAME=`hostname`/" /etc/sysconfig/network
+  &&  sed -i "s/HOSTNAME=.*/HOSTNAME=`hostname`/" /etc/sysconfig/network 
 
 systemctl disable firewalld
 systemctl stop firewalld
@@ -201,7 +201,7 @@ sed -i "s/YourHostname/`hostname`/g" /opt/cloudera/cem/minifi/conf/bootstrap.con
 
 echo "-- Enable passwordless root login via rsa key"
 ssh-keygen -f ~/myRSAkey -t rsa -N ""
-mkdir ~/.ssh
+[[ !-d ~/.ssh ]] && mkdir ~/.ssh
 cat ~/myRSAkey.pub >> ~/.ssh/authorized_keys
 chmod 400 ~/.ssh/authorized_keys
 ssh-keyscan -H `hostname` >> ~/.ssh/known_hosts
