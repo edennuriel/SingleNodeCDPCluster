@@ -201,7 +201,7 @@ sed -i "s/YourHostname/`hostname`/g" /opt/cloudera/cem/minifi/conf/bootstrap.con
 
 echo "-- Enable passwordless root login via rsa key"
 ssh-keygen -f ~/myRSAkey -t rsa -N ""
-[[ !-d ~/.ssh ]] && mkdir ~/.ssh
+[[ ! -d ~/.ssh ]] && mkdir ~/.ssh
 cat ~/myRSAkey.pub >> ~/.ssh/authorized_keys
 chmod 400 ~/.ssh/authorized_keys
 ssh-keyscan -H `hostname` >> ~/.ssh/known_hosts
@@ -211,10 +211,10 @@ systemctl restart sshd
 echo "-- Start CM, it takes about 2 minutes to be ready"
 systemctl start cloudera-scm-server
 
-while [ `curl -s -X GET -u "admin:admin"  http://localhost:7180/api/version` -z ] ;
-    do
-    echo "waiting 10s for CM to come up..";
-    sleep 10;
+while [[ -z `curl -s -X GET -u "admin:admin"  http://localhost:7180/api/version` -]] 
+do
+  echo "waiting 10s for CM to come up.."
+  sleep 10
 done
 
 echo "-- Now CM is started and the next step is to automate using the CM API"
